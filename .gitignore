@@ -1,0 +1,4 @@
+out/
+carbon_toolchain-*/
+RESULTS.md
+*.o
