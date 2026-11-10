@@ -53,15 +53,7 @@ if command -v rustc >/dev/null 2>&1; then
   done
 fi
 
-# 7. Smoke test: rodar cada um 1x (confere saida igual)
-echo ""
-echo "==> Smoke test (saidas)"
-for exe in out/carbon_* out/cpp_* out/rust_*; do
-  [ -x "$exe" ] || continue
-  echo "$(basename "$exe"): $(timeout 120 "$exe" 2>&1 | head -c 80)"
-done
-
-# 8. Benchmark
+# 8. Benchmark (exit code do carbon e o resultado mod 256, por isso --ignore-failure)
 run_one() {
   local label="$1"; shift
   local cmds=()
@@ -71,7 +63,7 @@ run_one() {
   if [ ${#cmds[@]} -gt 0 ]; then
     echo ""
     echo "## $label"
-    hyperfine --warmup 1 --runs 5 "${cmds[@]}" 2>&1 || true
+    hyperfine --warmup 1 --runs 5 --ignore-failure "${cmds[@]}" 2>&1 || true
   fi
 }
 
@@ -80,6 +72,13 @@ run_one() {
   echo ""
   echo "Data: $(date -u +%Y-%m-%dT%H:%M:%SZ) | Toolchain: ${CARBON_VERSION} | $(nproc) vCPU | $(lscpu | grep 'Model name' | sed 's/.*: *//')"
   echo ""
+  echo "## Smoke test (saida de cada binario, prova de equivalencia semantica)"
+  echo '```'
+  for exe in out/carbon_* out/cpp_* out/rust_*; do
+    [ -x "$exe" ] || continue
+    echo "$(basename "$exe"): $(timeout 120 "$exe" 2>&1 | head -c 80) [exit $?]"
+  done
+  echo '```'
   run_one "fib_rec (n=32, 3.5M chamadas)" out/carbon_fib_rec out/cpp_fib_rec out/rust_fib_rec
   run_one "fib_iter (n=40M)" out/carbon_fib_iter out/cpp_fib_iter out/rust_fib_iter
   run_one "sieve (n=1M)" out/carbon_sieve out/cpp_sieve out/rust_sieve
