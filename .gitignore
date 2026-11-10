@@ -1,6 +1,5 @@
 out/
 carbon_toolchain-*/
-RESULTS.md
 *.o
 _artifact/
 _msg.txt
