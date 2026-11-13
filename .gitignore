@@ -3,3 +3,6 @@ carbon_toolchain-*/
 *.o
 _artifact/
 _msg.txt
+
+.env.local
+.dev.vars
